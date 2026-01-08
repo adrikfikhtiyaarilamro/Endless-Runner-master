@@ -1,6 +1,4 @@
-# Endless Runner + Voice Command Integration
-
-Panduan singkat menjalankan game dengan perintah suara (Windows).
+# Endless Runner + Voice Command + Gesture Detection
 
 ## Requirements
 - Windows 10/11, .NET 9 SDK
