@@ -36,7 +36,6 @@ HOP_LENGTH = 160
 # MODEL_PATH = '../checkpoints/hybrid/best_model(pink).pth'
 # MODEL_PATH = '../checkpoints/hybrid/best_model(white).pth'
 
-# Use absolute path relative to this script file to ensure loading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Checkpoints are in ../checkpoints relative to this script
 MODEL_PATH = os.path.join(BASE_DIR, '../checkpoints/hybrid/best_model(pink).pth')
@@ -228,21 +227,18 @@ def send_tcp_command(command):
     """Send command via TCP"""
     try:
         if socketClient:
-            full_msg = f"{command.upper()}\n" # Send Uppercase + Newline for Unity
+            full_msg = f"{command.upper()}\n"
             socketClient.sendall(full_msg.encode('utf-8'))
-            # t_end = time.time() * 1000 # This line was in the instruction but 'time' is not imported here and its purpose is unclear in this context.
             print(f"[TCP] Sent: {command}")
     except Exception as e:
         print(f"[TCP] Error: {e}")
 
 
 
-import soundfile as sf  # Explicit import for saving
-
-# SAVE_DIR = "captured_samples"
+import soundfile as sf 
 SAVE_DIR = os.path.join(BASE_DIR, "captured_samples")
 os.makedirs(SAVE_DIR, exist_ok=True)
-save_samples_var = None # Will be initialized in GUI section
+save_samples_var = None
 
 def save_audio_sample(audio_np, label, prob):
     """Save the audio sample to disk"""
@@ -305,13 +301,12 @@ def log_inference(prediction, confidence, inf_time, transport_time):
     try:
         with open(LOG_FILE, mode='a', newline='') as file:
             writer = csv.writer(file)
-            # Write row with empty placeholders for Manual columns
             writer.writerow([
                 experiment_id, 
                 timestamp, 
-                "",             # Manual Label
+                "",             
                 prediction, 
-                "",             # Manual Status
+                "",             
                 f"{confidence:.2f}", 
                 f"{inf_time*1000:.2f}", 
                 f"{transport_time*1000:.2f}", 
@@ -325,14 +320,14 @@ is_listening = False
 def continuous_listen():
     """Continuously listen and predict"""
     global is_listening
-    window_size = int(0.05 * SAMPLE_RATE)  # 50ms
+    window_size = int(0.05 * SAMPLE_RATE)
 
     while is_listening:
         frames = []
 
 
         def callback(indata, frames_count, time, status):
-            amplified = indata # * 3.0 (Removed to match training data)
+            amplified = indata
             rms = np.sqrt(np.mean(amplified**2))
             volume_level.set(min(rms * 500, 100))
             frames.append(amplified.copy())
@@ -391,7 +386,7 @@ def continuous_listen():
             transport_dur = 0.0
 
 
-            if max_prob.item() < 0.8:  # Increased threshold to reduce false positives
+            if max_prob.item() < 0.8:
 
                 result_var.set(f"Uncertain ({global_rms:.4f}) - {LABELS[pred.item()]} ({max_prob.item():.2f})")
             else:
