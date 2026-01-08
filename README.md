@@ -43,6 +43,9 @@ python inference_gui.py
 - Game Unity: menerima input keyboard dan menggerakkan karakter.
 
 ## Tips & Troubleshooting
+- **Venv activate disabled by system**: PowerShell execution policy memblokir script. Jalankan:
+  `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+  atau gunakan Python langsung: `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`
 - **Port 5005 tidak listening**: pastikan tombol **Start Server** diklik dan netstat menunjukkan LISTENING.
 - **GTK error / GUI tidak muncul**: pastikan GTK3 runtime ter-install; jalankan ulang `dotnet run` setelah instalasi.
 - **Torch/torchaudio gagal install**: gunakan index PyTorch resmi, contoh CUDA 12.4:
