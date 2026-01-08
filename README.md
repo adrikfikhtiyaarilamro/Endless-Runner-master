@@ -4,7 +4,7 @@ Panduan singkat menjalankan game dengan perintah suara (Windows).
 
 ## Requirements
 - Windows 10/11, .NET 9 SDK
-- Python 3.10+ (anjuran), pip
+- Python 3.10+, pip
 - GTK3 runtime (dibutuhkan oleh TCPServer GTK). Jika belum ada, install GTK3 for Windows (MSYS2 `mingw-w64-x86_64-gtk3` atau installer GTK3 runtime).
 - (Opsional) GPU + PyTorch CUDA
 
