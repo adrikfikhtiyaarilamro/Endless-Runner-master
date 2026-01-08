@@ -43,7 +43,6 @@ python inference_gui.py
 - Game Unity: menerima input keyboard dan menggerakkan karakter.
 
 ## Tips & Troubleshooting
-- **Project file not found**: jalankan perintah dari root repo dengan path ber-quote seperti contoh.
 - **Port 5005 tidak listening**: pastikan tombol **Start Server** diklik dan netstat menunjukkan LISTENING.
 - **GTK error / GUI tidak muncul**: pastikan GTK3 runtime ter-install; jalankan ulang `dotnet run` setelah instalasi.
 - **Torch/torchaudio gagal install**: gunakan index PyTorch resmi, contoh CUDA 12.4:
