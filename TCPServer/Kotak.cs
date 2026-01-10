@@ -9,6 +9,8 @@ namespace TCPServer
         public double Y { get; private set; }
         public double Width { get; set; }
         public double Height { get; set; }
+        public string LastMovementStatus { get; private set; } = "idle"; // Track last move result
+        public string LastMovement { get; private set; } = ""; // Track last successful move
 
         private double groundY;
         private double jumpHeight = 30;
@@ -24,26 +26,39 @@ namespace TCPServer
 
         public void Move(string direction)
         {
+            bool moved = false;
             switch (direction.ToLower())
             {
                 case "left":
                     if (currentLaneIndex > 0)
+                    {
                         currentLaneIndex--;
+                        moved = true;
+                    }
                     break;
 
                 case "right":
                     if (currentLaneIndex < lanes.Length - 1)
+                    {
                         currentLaneIndex++;
+                        moved = true;
+                    }
                     break;
 
                 case "up": // jump
                     Y = groundY - jumpHeight;
+                    moved = true;
                     break;
 
                 case "down": // slide
                     Y = groundY + slideHeight;
+                    moved = true;
                     break;
             }
+
+            // Track movement status
+            LastMovement = direction.ToLower();
+            LastMovementStatus = moved ? "success" : "blocked"; // success/blocked (e.g., already at edge)
 
             // Kembalikan ke posisi semula setelah waktu singkat (simulate jump/slide)
             var timer = new System.Timers.Timer(300); // 300ms

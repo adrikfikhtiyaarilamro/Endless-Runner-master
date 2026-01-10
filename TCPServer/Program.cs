@@ -160,6 +160,21 @@ class TcpServerApp
                     
                     // ⭐ SEND KEYBOARD TO GAME
                     SendKeyToGame(message);
+
+                    // ⭐ Send ACK back to client with server timestamp & game status
+                    try
+                    {
+                        long serverTsMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        string gameStatus = box.LastMovementStatus; // "success" atau "blocked"
+                        string ack = $"ACK|{message}|{serverTsMs}|{gameStatus}\n";
+                        byte[] ackBytes = Encoding.UTF8.GetBytes(ack);
+                        stream.Write(ackBytes, 0, ackBytes.Length);
+                        AppendLog($"💬 ACK sent: {ack.Trim()} | Game: {gameStatus}");
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendLog($"ACK error: {ex.Message}");
+                    }
                 }
             }
         }
