@@ -12,6 +12,7 @@ import socket
 import os
 import csv
 import time
+from collections import deque
 
 # === TCP Settings ===
 TCP_HOST = '127.0.0.1'
@@ -22,31 +23,31 @@ socketClient = None
 # === Model Settings ===
 SAMPLE_RATE = 16000
 DURATION = 1.0 
-N_MFCC = 30
+N_MFCC = 40  
 N_MELS = 40
 NUM_CLASSES = 4
 LABELS = ['down', 'left', 'right', 'up']
+
+# Decision thresholds to reduce wrong feedback
+CONF_THRESH = 0.6           # minimum confidence to consider a command
+HIGH_CONF_THRESH = 0.8      # auto-commit if above this
+TOP2_MARGIN_MIN = 0.15      # require top1 - top2 margin to be at least this
+AGREE_WINDOW = 3            # consecutive predictions window
+AGREE_MIN = 2               # require at least this many consecutive agreements
 
 # MFCC parameters for 16kHz
 N_FFT = 512
 WIN_LENGTH = 400
 HOP_LENGTH = 160
 
-
-# MODEL_PATH = '../checkpoints/hybrid/best_model(pink).pth'
-# MODEL_PATH = '../checkpoints/hybrid/best_model(white).pth'
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Checkpoints are in ../checkpoints relative to this script
-MODEL_PATH = os.path.join(BASE_DIR, '../checkpoints/hybrid/best_model(pink).pth')
-
+MODEL_PATH = os.path.join(BASE_DIR, '../checkpoints/transformer/best_model_40.pth')
 
 # === BiLSTM Settings ===
 LSTM_HIDDEN = 128
 LSTM_LAYERS = 2
 LSTM_DROPOUT = 0.2
-USE_BILSTM = True  # Set to True to use BiLSTM_Transformer, False for MFCC_Transformer
-
+USE_BILSTM = False  
 
 # === Model Definition ===
 class PositionalEncoding(nn.Module):
@@ -71,7 +72,7 @@ class PositionalEncoding(nn.Module):
 class MFCC_Transformer(nn.Module):
     def __init__(
         self,
-        n_mfcc: int = 30,
+        n_mfcc: int = 40,
         num_classes: int = 4,
         d_model: int = 128,
         nhead: int = 4,
@@ -125,8 +126,6 @@ class MFCC_Transformer(nn.Module):
         feat = h.mean(dim=1)
         logits = self.head(feat)
         return logits
-
-
 
 class BiLSTM_Transformer(nn.Module):
     def __init__(self,
@@ -209,6 +208,7 @@ model.to(device)
 model.eval()
 
 # === MFCC Transform ===
+# Move to device to match training pipeline
 mfcc_transform = torchaudio.transforms.MFCC(
     sample_rate=SAMPLE_RATE,
     n_mfcc=N_MFCC,
@@ -221,19 +221,55 @@ mfcc_transform = torchaudio.transforms.MFCC(
         "f_min": 0.0,
         "f_max": SAMPLE_RATE / 2
     }
-)
+).to(device)
 
 def send_tcp_command(command):
-    """Send command via TCP"""
+    """Send command via TCP and wait for ACK. Returns (send_duration, ack_latency, game_status)."""
     try:
         if socketClient:
             full_msg = f"{command.upper()}\n"
+            t0_send = time.perf_counter()
             socketClient.sendall(full_msg.encode('utf-8'))
+            t1_send = time.perf_counter()
+            send_duration = t1_send - t0_send
+
+            ack_latency = None
+            game_status = "unknown"  # Track game status: success/blocked/unknown
+            try:
+                # Temporarily set a timeout for ACK reception
+                socketClient.settimeout(1.0)
+                buf = b""
+                while True:
+                    chunk = socketClient.recv(1024)
+                    if not chunk:
+                        break
+                    buf += chunk
+                    # Stop after first line or if buffer starts with ACK
+                    if b"\n" in buf or buf.startswith(b"ACK"):
+                        break
+                if buf:
+                    line = buf.split(b"\n")[0].decode("utf-8", errors="ignore").strip()
+                    if line.startswith("ACK"):
+                        t_ack = time.perf_counter()
+                        ack_latency = t_ack - t0_send
+                        # Parse ACK format: "ACK|command|timestamp|game_status"
+                        parts = line.split("|")
+                        if len(parts) >= 4:
+                            game_status = parts[3]  # Extract game_status
+                        print(f"[TCP] Received: {line} (ACK latency {ack_latency*1000:.2f} ms, Status: {game_status})")
+            except Exception as e:
+                print(f"[TCP] ACK wait error: {e}")
+            finally:
+                try:
+                    socketClient.settimeout(None)
+                except Exception:
+                    pass
+
             print(f"[TCP] Sent: {command}")
+            return send_duration, ack_latency, game_status
     except Exception as e:
         print(f"[TCP] Error: {e}")
-
-
+    return 0.0, None, "error"
 
 import soundfile as sf 
 SAVE_DIR = os.path.join(BASE_DIR, "captured_samples")
@@ -261,11 +297,6 @@ def save_audio_sample(audio_np, label, prob):
         traceback.print_exc()
         print(f"[DATA] Failed to save sample: {e}")
 
-
-
-
-
-
 # === Logging Setup ===
 LOG_FILE = "inference_log_detailed.csv"
 experiment_id = 0
@@ -274,7 +305,7 @@ def init_csv_log():
     if not os.path.exists(LOG_FILE):
         with open(LOG_FILE, mode='w', newline='') as file:
             writer = csv.writer(file)
-            # Headers matching user request + timestamps/confidence
+            # Headers matching user request + timestamps/confidence + game_status
             headers = [
                 "ID Percobaan", 
                 "Timestamp", 
@@ -284,17 +315,19 @@ def init_csv_log():
                 "Confidence", 
                 "Inference Time (ms)", 
                 "Transport Latency (ms)", 
-                "Total Response Time (ms)"
+                "Server ACK Latency (ms)",
+                "Total Response Time (ms)",
+                "Game Status"  # NEW: Track game movement success/blocked
             ]
             writer.writerow(headers)
             print(f"[LOG] Created {LOG_FILE}")
 
 init_csv_log()
 
-def log_inference(prediction, confidence, inf_time, transport_time):
+def log_inference(prediction, confidence, inf_time, transport_time, ack_latency=None, game_status="unknown"):
     global experiment_id
     experiment_id += 1
-    total_time = inf_time + transport_time
+    total_time = inf_time + transport_time + (ack_latency if ack_latency is not None else 0.0)
     
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     
@@ -310,19 +343,32 @@ def log_inference(prediction, confidence, inf_time, transport_time):
                 f"{confidence:.2f}", 
                 f"{inf_time*1000:.2f}", 
                 f"{transport_time*1000:.2f}", 
-                f"{total_time*1000:.2f}"
+                f"{(ack_latency*1000 if ack_latency is not None else 0.0):.2f}",
+                f"{total_time*1000:.2f}",
+                game_status  # NEW: Log game status
             ])
     except Exception as e:
         print(f"[LOG] Error writing to CSV: {e}")
 
 is_listening = False
+last_prediction_time = 0  # Track last prediction to prevent duplicates
+COOLDOWN_SECONDS = 0.8    # Cooldown period after successful prediction
+pred_history = deque(maxlen=AGREE_WINDOW)
 
 def continuous_listen():
     """Continuously listen and predict"""
-    global is_listening
+    global is_listening, last_prediction_time
     window_size = int(0.05 * SAMPLE_RATE)
 
     while is_listening:
+        # Check cooldown - skip if too soon after last prediction
+        time_since_last = time.time() - last_prediction_time
+        if time_since_last < COOLDOWN_SECONDS:
+            remaining = COOLDOWN_SECONDS - time_since_last
+            result_var.set(f"⏳ Cooldown {remaining:.1f}s...")
+            time.sleep(0.1)
+            continue
+        
         frames = []
 
 
@@ -350,13 +396,19 @@ def continuous_listen():
 
         print(f"[DEBUG] RMS: {global_rms:.4f}, Audio samples: {audio.shape[1]}")
 
-        if global_rms < 0.005: 
+        # Lower threshold for better mic sensitivity
+        if global_rms < 0.002: 
             result_var.set(f"No sound detected (RMS: {global_rms:.4f})")
             continue
 
         waveform = torch.tensor(audio, dtype=torch.float32)
         if waveform.ndim == 1:
             waveform = waveform.unsqueeze(0)
+        
+        # Normalize to [-1, 1] range for consistent MFCC extraction
+        max_val = waveform.abs().max()
+        if max_val > 1e-6:
+            waveform = waveform / max_val
 
         print(f"[DEBUG] Waveform shape: {waveform.shape}")
         print(f"[DEBUG] Waveform min/max: {waveform.min():.4f} / {waveform.max():.4f}")
@@ -385,22 +437,49 @@ def continuous_listen():
             inference_dur = t1_inf - t0_inf
             transport_dur = 0.0
 
+            # Robust decision: require sufficient confidence, top-2 margin,
+            # and consecutive agreement, else mark as Uncertain
+            probs_sorted, indices = torch.sort(probs[0], descending=True)
+            top1_label = LABELS[indices[0].item()]
+            top2_label = LABELS[indices[1].item()]
+            top1_prob = probs_sorted[0].item()
+            top2_prob = probs_sorted[1].item()
+            margin = top1_prob - top2_prob
 
-            if max_prob.item() < 0.8:
-
-                result_var.set(f"Uncertain ({global_rms:.4f}) - {LABELS[pred.item()]} ({max_prob.item():.2f})")
+            should_commit = False
+            agree_count = 1
+            # High confidence -> commit immediately regardless of margin
+            if top1_prob >= HIGH_CONF_THRESH:
+                should_commit = True
             else:
-                prediction = LABELS[pred.item()]
-                result_var.set(f"Predicted: {prediction} ({max_prob.item():.2f})")
+                # Accumulate history and require agreement within window
+                pred_history.append((top1_label, top1_prob))
+                agree_count = sum(1 for lbl, _p in pred_history if lbl == top1_label)
+                if margin >= TOP2_MARGIN_MIN and top1_prob >= CONF_THRESH and agree_count >= AGREE_MIN:
+                    should_commit = True
+
+            if not should_commit:
+                result_var.set(f"❓ Uncertain: {top1_label}({top1_prob:.2f}) vs {top2_label}({top2_prob:.2f})")
+            else:
+                prediction = top1_label
+                result_var.set(f"✅ {prediction.upper()} ({top1_prob:.2f})")
                 
-                t0_net = time.perf_counter()
-                send_tcp_command(prediction)
-                t1_net = time.perf_counter()
-                transport_dur = t1_net - t0_net
+                send_dur, ack_latency, game_status = send_tcp_command(prediction)
+                transport_dur = send_dur
                 
-            # Log Data
-            current_pred = LABELS[pred.item()] if max_prob.item() >= 0.4 else "Uncertain"
-            log_inference(current_pred, max_prob.item(), inference_dur, transport_dur)
+                # Update last prediction time to start cooldown
+                last_prediction_time = time.time()
+                print(f"[COOLDOWN] Started {COOLDOWN_SECONDS}s cooldown after '{prediction}' (prob={top1_prob:.2f}, margin={margin:.2f}, agree={agree_count})")
+                
+            # Log Data (use top1_prob)
+            current_pred = (prediction if should_commit else "Uncertain")
+            # Pass ACK latency and game status if available
+            try:
+                game_status_log = game_status if should_commit else "uncertain"
+                log_inference(current_pred, top1_prob, inference_dur, transport_dur, ack_latency if should_commit else None, game_status_log)
+            except NameError:
+                # Fallback if game_status isn't defined (uncertain path)
+                log_inference(current_pred, top1_prob, inference_dur, transport_dur, None)
 
             # Save data if enabled
             save_audio_sample(audio, LABELS[pred.item()], max_prob.item())
@@ -428,8 +507,9 @@ def start_listening():
 
 def stop_listening():
     """Stop listening mode"""
-    global is_listening, socketClient
+    global is_listening, socketClient, last_prediction_time
     is_listening = False
+    last_prediction_time = 0  # Reset cooldown
 
     if socketClient:
         try:
@@ -495,7 +575,6 @@ save_samples_var = tk.BooleanVar(value=False)
 save_check = ttk.Checkbutton(frame, text="Save Recorded Samples (for Data Collection)", 
                              variable=save_samples_var, onvalue=True, offvalue=False)
 save_check.grid(column=0, row=7, columnspan=2, pady=10)
-
 
 # Refresh UI loop
 def update_gui():
