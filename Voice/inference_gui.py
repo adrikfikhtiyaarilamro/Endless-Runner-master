@@ -251,7 +251,8 @@ def send_tcp_command(command):
                     line = buf.split(b"\n")[0].decode("utf-8", errors="ignore").strip()
                     if line.startswith("ACK"):
                         t_ack = time.perf_counter()
-                        ack_latency = t_ack - t0_send
+                        # Measure ACK latency relative to end of send to avoid double counting
+                        ack_latency = t_ack - t1_send
                         # Parse ACK format: "ACK|command|timestamp|game_status"
                         parts = line.split("|")
                         if len(parts) >= 4:
