@@ -38,25 +38,31 @@ def calculate_metrics(df, model_name):
     for cls in CLASSES:
         cls_data = df[df['Prediksi Model'] == cls]
         if len(cls_data) > 0:
+            inf_time = cls_data['Inference Time (ms)'].astype(float).mean()
+            transport_time = cls_data['Transport Latency (ms)'].astype(float).mean()
             metrics['per_class'][cls] = {
                 'count': len(cls_data),
                 'avg_confidence': cls_data['Confidence'].astype(float).mean(),
                 'min_confidence': cls_data['Confidence'].astype(float).min(),
                 'max_confidence': cls_data['Confidence'].astype(float).max(),
                 'std_confidence': cls_data['Confidence'].astype(float).std(),
-                'avg_inference_time': cls_data['Inference Time (ms)'].astype(float).mean(),
-                'avg_total_response': cls_data['Total Response Time (ms)'].astype(float).mean(),
+                'avg_inference_time': inf_time,
+                'avg_transport_latency': transport_time,
+                'avg_total_response': inf_time + transport_time,
             }
     
     # Overall metrics
     if len(df) > 0:
+        inf_time = df['Inference Time (ms)'].astype(float).mean()
+        transport_time = df['Transport Latency (ms)'].astype(float).mean()
         metrics['overall'] = {
             'avg_confidence': df['Confidence'].astype(float).mean(),
             'min_confidence': df['Confidence'].astype(float).min(),
             'max_confidence': df['Confidence'].astype(float).max(),
             'std_confidence': df['Confidence'].astype(float).std(),
-            'avg_inference_time': df['Inference Time (ms)'].astype(float).mean(),
-            'avg_total_response': df['Total Response Time (ms)'].astype(float).mean(),
+            'avg_inference_time': inf_time,
+            'avg_transport_latency': transport_time,
+            'avg_total_response': inf_time + transport_time,
             'success_rate': (df['Game Status'] == 'success').sum() / len(df) * 100,
         }
     
@@ -170,11 +176,12 @@ def save_comparison_csv(all_metrics):
         rows_overall.append({
             'Model': metrics['model'],
             'Total_Samples': metrics['total_samples'],
-            'Avg_Confidence': f"{metrics['overall']['avg_confidence']:.4f}",
-            'Std_Confidence': f"{metrics['overall']['std_confidence']:.4f}",
-            'Min_Confidence': f"{metrics['overall']['min_confidence']:.4f}",
-            'Max_Confidence': f"{metrics['overall']['max_confidence']:.4f}",
+            'Avg_Confidence_%': f"{metrics['overall']['avg_confidence']*100:.2f}%",
+            'Std_Confidence_%': f"{metrics['overall']['std_confidence']*100:.2f}%",
+            'Min_Confidence_%': f"{metrics['overall']['min_confidence']*100:.2f}%",
+            'Max_Confidence_%': f"{metrics['overall']['max_confidence']*100:.2f}%",
             'Avg_Inference_Time_ms': f"{metrics['overall']['avg_inference_time']:.1f}",
+            'Avg_Transport_Latency_ms': f"{metrics['overall']['avg_transport_latency']:.2f}",
             'Avg_Total_Response_ms': f"{metrics['overall']['avg_total_response']:.2f}",
             'Success_Rate': f"{metrics['overall']['success_rate']:.2f}%",
         })
@@ -193,11 +200,12 @@ def save_comparison_csv(all_metrics):
                     'Model': metrics['model'],
                     'Class': cls,
                     'Count': cls_info['count'],
-                    'Avg_Confidence': f"{cls_info['avg_confidence']:.4f}",
-                    'Std_Confidence': f"{cls_info['std_confidence']:.4f}",
-                    'Min_Confidence': f"{cls_info['min_confidence']:.4f}",
-                    'Max_Confidence': f"{cls_info['max_confidence']:.4f}",
+                    'Avg_Confidence_%': f"{cls_info['avg_confidence']*100:.2f}%",
+                    'Std_Confidence_%': f"{cls_info['std_confidence']*100:.2f}%",
+                    'Min_Confidence_%': f"{cls_info['min_confidence']*100:.2f}%",
+                    'Max_Confidence_%': f"{cls_info['max_confidence']*100:.2f}%",
                     'Avg_Inference_Time_ms': f"{cls_info['avg_inference_time']:.1f}",
+                    'Avg_Transport_Latency_ms': f"{cls_info['avg_transport_latency']:.2f}",
                     'Avg_Total_Response_ms': f"{cls_info['avg_total_response']:.2f}",
                 })
     
