@@ -18,7 +18,6 @@ pip install -r requirements.txt
 2) Jalankan TCP Server (port 5005)
 ```powershell
 cd path\to\Endless-Runner-master
-dotnet run --project .\TCPServer\TCPServer.csproj --configuration Debug
 dotnet run --configuration Debug
 ```
 - Klik **Start Server** di jendela GTK.
