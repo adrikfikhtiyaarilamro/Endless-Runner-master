@@ -41,6 +41,7 @@ WIN_LENGTH = 400
 HOP_LENGTH = 160
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# just change the model path to load a different model
 MODEL_PATH = os.path.join(BASE_DIR, '../checkpoints/transformer/best_model_40.pth')
 
 # === BiLSTM Settings ===
