@@ -71,7 +71,7 @@ def print_comparison(all_metrics):
     # Inference speed comparison
     print("\n⚡ INFERENCE TIME (ms) - Model Execution Speed")
     print("-" * 120)
-    print(f"{'Model':<30} {'Avg Inf Time':<18} {'Min':<12} {'Max':<12} {'Std Dev':<12} {'Per-Sample':<15}")
+    print(f"{'Model':<30} {'Avg Inf Time':<15} {'Min':<10} {'Max':<10} {'Std Dev':<10} {'Per-Sample':<12}")
     print("-" * 120)
     
     for metrics in all_metrics:
@@ -92,7 +92,7 @@ def print_comparison(all_metrics):
                 all_inf.append(metrics['per_class'][cls]['avg_inference_time'])
         std_inf = np.std(all_inf) if all_inf else 0
         
-        print(f"{model:<30} {avg_inf:<18.3f} {min_inf:<12.3f} {max_inf:<12.3f} {std_inf:<12.3f} {avg_inf/15:<15.4f}")
+        print(f"{model:<30} {avg_inf:<15.1f} {min_inf:<10.1f} {max_inf:<10.1f} {std_inf:<10.2f} {avg_inf/15:<12.2f}")
     
     # End-to-end latency
     print("\n\n📊 TOTAL RESPONSE TIME (ms) - End-to-End Latency")
@@ -174,7 +174,7 @@ def save_comparison_csv(all_metrics):
             'Std_Confidence': f"{metrics['overall']['std_confidence']:.4f}",
             'Min_Confidence': f"{metrics['overall']['min_confidence']:.4f}",
             'Max_Confidence': f"{metrics['overall']['max_confidence']:.4f}",
-            'Avg_Inference_Time_ms': f"{metrics['overall']['avg_inference_time']:.3f}",
+            'Avg_Inference_Time_ms': f"{metrics['overall']['avg_inference_time']:.1f}",
             'Avg_Total_Response_ms': f"{metrics['overall']['avg_total_response']:.2f}",
             'Success_Rate': f"{metrics['overall']['success_rate']:.2f}%",
         })
@@ -197,7 +197,7 @@ def save_comparison_csv(all_metrics):
                     'Std_Confidence': f"{cls_info['std_confidence']:.4f}",
                     'Min_Confidence': f"{cls_info['min_confidence']:.4f}",
                     'Max_Confidence': f"{cls_info['max_confidence']:.4f}",
-                    'Avg_Inference_Time_ms': f"{cls_info['avg_inference_time']:.3f}",
+                    'Avg_Inference_Time_ms': f"{cls_info['avg_inference_time']:.1f}",
                     'Avg_Total_Response_ms': f"{cls_info['avg_total_response']:.2f}",
                 })
     
