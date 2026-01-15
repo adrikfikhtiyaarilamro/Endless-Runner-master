@@ -29,8 +29,8 @@ NUM_CLASSES = 4
 LABELS = ['down', 'left', 'right', 'up']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# BiLSTM-Transformer 16K Pink 40 - hybrid model (if available, otherwise White 40)
-MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Bilstm-Transformer/Bilstm-Transformer 16K Pink 40/bestmodel.pth')
+# BiLSTM-Transformer 16K Pink 40 (N_MFCC=40, menggunakan seed42_fold1 sebagai best model)
+MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Bilstm-Transformer/Bilstm-Transformer 16K Pink 40/kfold_outputs_sr16000/per_seed_and_fold/bilstm_transformer_seed42_fold1_sr16000/best_model.pth')
 
 # === Configuration untuk BiLSTM-Transformer ===
 CONF_THRESH = 0.35
@@ -309,6 +309,7 @@ def continuous_listen():
         if waveform.ndim == 1:
             waveform = waveform.unsqueeze(0)
         
+        # Normalize waveform - konsisten dengan Transformer & BiLSTM
         max_val = waveform.abs().max()
         if max_val > 1e-6:
             waveform = waveform / max_val
@@ -340,6 +341,7 @@ def continuous_listen():
 
             should_commit = False
             agree_count = 1
+            prediction = top1_label  # Initialize prediction dengan top1 label
             if top1_prob >= HIGH_CONF_THRESH:
                 should_commit = True
             else:
@@ -351,7 +353,6 @@ def continuous_listen():
             if not should_commit:
                 result_var.set(f"❓ Uncertain: {top1_label}({top1_prob:.2f}) vs {top2_label}({top2_prob:.2f})")
             else:
-                prediction = top1_label
                 result_var.set(f"✅ {prediction.upper()} ({top1_prob:.2f})")
                 
                 send_dur, ack_latency, game_status = send_tcp_command(prediction)
