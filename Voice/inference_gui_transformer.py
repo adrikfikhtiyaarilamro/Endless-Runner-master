@@ -29,10 +29,10 @@ NUM_CLASSES = 4
 LABELS = ['down', 'left', 'right', 'up']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Transformer Pink 40 - optimal model
+# Transformer Pink 40 
 MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Transformer/Transformer Pink 40/bestmodel.pth')
 
-# === Configuration untuk Transformer ===
+# === Configuration Transformer ===
 CONF_THRESH = 0.25
 HIGH_CONF_THRESH = 0.4
 TOP2_MARGIN_MIN = 0.02

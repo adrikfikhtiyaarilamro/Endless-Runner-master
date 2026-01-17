@@ -75,7 +75,7 @@ def print_comparison(all_metrics):
     print("="*120)
     
     # Inference speed comparison
-    print("\n⚡ INFERENCE TIME (ms) - Model Execution Speed")
+    print("\ INFERENCE TIME (ms) - Model Execution Speed")
     print("-" * 120)
     print(f"{'Model':<30} {'Avg Inf Time':<15} {'Min':<10} {'Max':<10} {'Std Dev':<10} {'Per-Sample':<12}")
     print("-" * 120)
@@ -101,7 +101,7 @@ def print_comparison(all_metrics):
         print(f"{model:<30} {avg_inf:<15.1f} {min_inf:<10.1f} {max_inf:<10.1f} {std_inf:<10.2f} {avg_inf/15:<12.2f}")
     
     # End-to-end latency
-    print("\n\n📊 TOTAL RESPONSE TIME (ms) - End-to-End Latency")
+    print("\n\nTOTAL RESPONSE TIME (ms) - End-to-End Latency")
     print("-" * 120)
     print(f"{'Model':<30} {'Avg Total':<18} {'Min':<12} {'Max':<12} {'Inference %':<15} {'Transport %':<15}")
     print("-" * 120)
@@ -125,11 +125,11 @@ def print_comparison(all_metrics):
         print(f"{model:<30} {total_resp:<18.2f} {min_resp:<12.2f} {max_resp:<12.2f} {inf_percent:<15.1f}% {transport_percent:<15.1f}%")
     
     # Per-class inference latency
-    print("\n\n🎯 PER-CLASS INFERENCE TIME (ms)")
+    print("\n\nPER-CLASS INFERENCE TIME (ms)")
     print("="*120)
     
     for cls in CLASSES:
-        print(f"\n📌 Kelas: {cls.upper()}")
+        print(f"\nKelas: {cls.upper()}")
         print("-" * 120)
         print(f"{'Model':<30} {'Avg (ms)':<15} {'Min (ms)':<15} {'Max (ms)':<15} {'Std Dev':<15} {'Count':<10}")
         print("-" * 120)
@@ -147,7 +147,7 @@ def print_comparison(all_metrics):
                 print(f"{model:<30} {avg_inf:<15.3f} {min_inf:<15.3f} {max_inf:<15.3f} {std_inf:<15.4f} {count:<10}")
     
     # Ranking by speed
-    print("\n\n🏆 RANKING BY INFERENCE SPEED")
+    print("\n\nRANKING BY INFERENCE SPEED")
     print("="*120)
     
     sorted_by_speed = sorted(all_metrics, key=lambda x: x['overall']['avg_inference_time'])
@@ -188,7 +188,7 @@ def save_comparison_csv(all_metrics):
     
     df_overall = pd.DataFrame(rows_overall)
     df_overall.to_csv(output_overall, index=False)
-    print(f"✅ Overall metrics: {output_overall}")
+    print(f"Overall metrics: {output_overall}")
     
     # Per-class metrics
     rows_perclass = []
@@ -211,19 +211,19 @@ def save_comparison_csv(all_metrics):
     
     df_perclass = pd.DataFrame(rows_perclass)
     df_perclass.to_csv(output_perclass, index=False)
-    print(f"✅ Per-class metrics: {output_perclass}\n")
+    print(f"Per-class metrics: {output_perclass}\n")
 
 # Main execution
 if __name__ == "__main__":
-    print("\n🔄 Loading inference logs...")
+    print("\nLoading inference logs...")
     
     df_transformer = load_log(LOG_TRANSFORMER)
     df_bilstm = load_log(LOG_BILSTM)
     df_bilstm_transformer = load_log(LOG_BILSTM_TRANSFORMER)
     
-    print("✅ Logs loaded\n")
+    print("Logs loaded\n")
     
-    print("🔍 Menghitung metrics...")
+    print("Menghitung metrics...")
     
     metrics_transformer = calculate_metrics(df_transformer, "MFCC-Transformer")
     metrics_bilstm = calculate_metrics(df_bilstm, "MFCC-LSTM (BiLSTM)")
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     
     all_metrics = [metrics_transformer, metrics_bilstm, metrics_bilstm_transformer]
     
-    print("✅ Metrics calculated\n")
+    print("Metrics calculated\n")
     
     # Print comparison
     print_comparison(all_metrics)
@@ -239,4 +239,4 @@ if __name__ == "__main__":
     # Save to CSV
     save_comparison_csv(all_metrics)
     
-    print("✅ Perbandingan selesai!")
+    print("Perbandingan selesai!")

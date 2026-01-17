@@ -32,7 +32,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # BiLSTM Pink 40 - pure LSTM model
 MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Bilstm/Bilstm Pink 40/bestmodel.pth')
 
-# === Configuration untuk Pure BiLSTM ===
+# === Configuration Pure BiLSTM ===
 CONF_THRESH = 0.30
 HIGH_CONF_THRESH = 0.45
 TOP2_MARGIN_MIN = 0.03
@@ -51,7 +51,7 @@ LSTM_DROPOUT = 0.2
 
 # === Model Definition ===
 
-# Pure BiLSTM (MFCC_LSTM from bilstm.ipynb training)
+# BiLSTM 
 class MFCC_LSTM(nn.Module):
     def __init__(
         self,

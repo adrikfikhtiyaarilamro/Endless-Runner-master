@@ -29,10 +29,10 @@ NUM_CLASSES = 4
 LABELS = ['down', 'left', 'right', 'up']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# BiLSTM-Transformer 16K Pink 40 (N_MFCC=40, menggunakan seed42_fold1 sebagai best model)
+# BiLSTM-Transformer 16K Pink 40
 MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Bilstm-Transformer/Bilstm-Transformer 16K Pink 40/kfold_outputs_sr16000/per_seed_and_fold/bilstm_transformer_seed42_fold1_sr16000/best_model.pth')
 
-# === Configuration untuk BiLSTM-Transformer ===
+# === Configuration BiLSTM-Transformer ===
 CONF_THRESH = 0.35
 HIGH_CONF_THRESH = 0.55
 TOP2_MARGIN_MIN = 0.05
