@@ -29,9 +29,9 @@ cd path\to\Endless-Runner-master\Voice
 cd Endless-Runner-master\Voice
 ..\..\. venv\Scripts\python.exe inference_gui.py
 or example
-& "C:\Users\Dricky\Downloads\Compressed\Summary v.01\.venv\Scripts\python.exe" inference_gui.py
+& "C:\Users\Dricky\Downloads\Compressed\Summary v.01\.venv\Scripts\python.exe" inference_gui_transformer.py
 ```
-- Model checkpoint: `checkpoints\transformer\best_model_40.pth` (MFCC Transformer, 40 koefisien).
+- Model checkpoint: `checkpoints\transformer\best_model.pth` (MFCC Transformer, 40 koefisien).
 - Pastikan konfigurasi host/port GUI mengarah ke `127.0.0.1:5005`.
 
 4) Jalankan Game Unity
