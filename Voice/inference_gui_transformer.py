@@ -30,7 +30,7 @@ LABELS = ['down', 'left', 'right', 'up']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Transformer Pink 40 
-MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Transformer/Transformer Pink 40/bestmodel.pth')
+MODEL_PATH = os.path.join(BASE_DIR, r'../../Endless-Runner-master/checkpoints/transformer/bestmodel.pth')
 
 # === Configuration Transformer ===
 CONF_THRESH = 0.25

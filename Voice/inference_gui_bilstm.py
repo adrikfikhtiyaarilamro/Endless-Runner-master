@@ -30,7 +30,7 @@ LABELS = ['down', 'left', 'right', 'up']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # BiLSTM Pink 40 - pure LSTM model
-MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Bilstm/Bilstm Pink 40/bestmodel.pth')
+MODEL_PATH = os.path.join(BASE_DIR, r'../../Endless-Runner-master/checkpoints/bilstm/bestmodel.pth')
 
 # === Configuration Pure BiLSTM ===
 CONF_THRESH = 0.30

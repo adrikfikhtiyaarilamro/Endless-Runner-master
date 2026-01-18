@@ -30,7 +30,7 @@ LABELS = ['down', 'left', 'right', 'up']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # BiLSTM-Transformer 16K Pink 40
-MODEL_PATH = os.path.join(BASE_DIR, r'../../7-9 January Results/Bilstm-Transformer/Bilstm-Transformer 16K Pink 40/kfold_outputs_sr16000/per_seed_and_fold/bilstm_transformer_seed42_fold1_sr16000/best_model.pth')
+MODEL_PATH = os.path.join(BASE_DIR, r'../../Endless-Runner-master/checkpoints/bilstm-transformer/best_model.pth')
 
 # === Configuration BiLSTM-Transformer ===
 CONF_THRESH = 0.35
