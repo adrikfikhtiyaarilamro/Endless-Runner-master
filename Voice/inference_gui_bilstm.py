@@ -241,7 +241,7 @@ def log_inference(prediction, confidence, inf_time, transport_time, ack_latency=
 
 is_listening = False
 last_prediction_time = 0
-COOLDOWN_SECONDS = 0.8
+COOLDOWN_SECONDS = 0.15
 pred_history = deque(maxlen=AGREE_WINDOW)
 
 def continuous_listen():

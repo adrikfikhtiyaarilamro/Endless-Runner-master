@@ -254,7 +254,7 @@ def log_inference(prediction, confidence, inf_time, transport_time, ack_latency=
 
 is_listening = False
 last_prediction_time = 0
-COOLDOWN_SECONDS = 0.8
+COOLDOWN_SECONDS = 0.15
 pred_history = deque(maxlen=AGREE_WINDOW)
 
 def continuous_listen():
@@ -293,7 +293,7 @@ def continuous_listen():
         
         global_rms = np.sqrt(np.mean(audio**2))
 
-        if global_rms < 0.002: 
+        if global_rms < 0.0009: 
             result_var.set(f"No sound detected (RMS: {global_rms:.4f})")
             continue
 
