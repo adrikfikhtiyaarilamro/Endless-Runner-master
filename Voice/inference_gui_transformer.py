@@ -293,7 +293,7 @@ def continuous_listen():
         
         global_rms = np.sqrt(np.mean(audio**2))
 
-        if global_rms < 0.0009: 
+        if global_rms < 0.0008: 
             result_var.set(f"No sound detected (RMS: {global_rms:.4f})")
             continue
 
