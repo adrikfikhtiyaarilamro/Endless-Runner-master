@@ -34,8 +34,8 @@ MODEL_PATH = os.path.join(BASE_DIR, r'../../Endless-Runner-master/checkpoints/tr
 
 # === Configuration Transformer ===
 CONF_THRESH = 0.25
-HIGH_CONF_THRESH = 0.4
-TOP2_MARGIN_MIN = 0.02
+HIGH_CONF_THRESH = 0.7
+TOP2_MARGIN_MIN = 0.05
 AGREE_WINDOW = 3
 AGREE_MIN = 1
 
